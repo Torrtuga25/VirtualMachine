@@ -8,7 +8,6 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.util.List;
 import java.util.ArrayList;
-import java.lang.reflect.Field;
 
 public class VirtualMachine {
 
@@ -18,20 +17,10 @@ public class VirtualMachine {
     private static int counter;
     private static int count = 0;
 
-    private static List<Label> List= new ArrayList<Label>();
+    private static List<Label> LabelList= new ArrayList<>();
+    private static List<Variable> VariableList= new ArrayList<>();
 
-
-    //Add SubLC3 variables here
-    private static int increment;
-    private static int num1;
-    private static int num2;
-    private static int sum;
-    private static int sub;
-    private static int quo;
-    private static int factor;
-    private static int tempNum;
-
-    //run the Virtual Machine
+    //Runs the Virtual Machine
     public static void main(String[] args) {
         new VirtualMachine();
     }
@@ -41,7 +30,7 @@ public class VirtualMachine {
             String line;
 
             //Adds relevant lines to the program array
-            for(int i = 0; (line = br.nextLine()) != null; i++) {
+            for(; (line = br.nextLine()) != null; ) {
                 String first = String.valueOf(line.charAt(0));
                 if(line.equals("HALT")) {
                     break;
@@ -52,15 +41,39 @@ public class VirtualMachine {
                 }
             }
 
+            //Create all Labels and Variables used in the SubLC3 code
             for(int i = 0; i < count; i++) {
                 String command = program[i];
                 String[] split = command.split("\\s+");
+                //Creates Labels
                 if(split.length == 1) {
                     String label = split[0];
                     setLabel(label, i);
                 }
+                //Creates Variables
+                switch(split[0]) {
+                    case "ADD": case "SUB": case "MUL": case "DIV":
+                        if (!VariableList.contains(new Variable(split[1])))
+                            setVariable(split[1], 0);
+                        if (!VariableList.contains(new Variable(split[2])))
+                            setVariable(split[2], 0);
+                        if (!VariableList.contains(new Variable(split[3])))
+                            setVariable(split[3], 0);
+                        break;
+                    case "STO":
+                        if (!VariableList.contains(new Variable(split[1])))
+                            setVariable(split[1], 0);
+                        if (!VariableList.contains(new Variable(split[2])))
+                            setVariable(split[2], 0);
+                        break;
+                    case "IN": case "OUT": case "BRn": case "BRz": case "BRp": case "BRzp": case "BRzn":
+                        if (!VariableList.contains(new Variable(split[1])))
+                            setVariable(split[1], 0);
+                        break;
+                }
             }
 
+            //Decodes and executes each command
             for(counter = 0; counter < count; counter++) {
                 String command = program[counter];
                 String[] split = command.split("\\s+");
@@ -84,15 +97,15 @@ public class VirtualMachine {
                         source1 = split[2];
                         source2 = split[3];
                         if(source1.matches(vPattern))
-                            intSource1 = getField(source1);
+                            intSource1 = getValue(source1);
                         else
                             intSource1 = Integer.parseInt(source1);
                         if(source2.matches(vPattern))
-                            intSource2 = getField(source2);
+                            intSource2 = getValue(source2);
                         else
                             intSource2 = Integer.parseInt(source2);
                         ans = intSource1 + intSource2;
-                        setField(destination, ans);
+                        setValue(destination, ans);
                         break;
 
 
@@ -105,15 +118,15 @@ public class VirtualMachine {
                         source1 = split[2];
                         source2 = split[3];
                         if(source1.matches(vPattern))
-                            intSource1 = getField(source1);
+                            intSource1 = getValue(source1);
                         else
                             intSource1 = Integer.parseInt(source1);
                         if(source2.matches(vPattern))
-                            intSource2 = getField(source2);
+                            intSource2 = getValue(source2);
                         else
                             intSource2 = Integer.parseInt(source2);
                         ans = intSource1 - intSource2;
-                        setField(destination, ans);
+                        setValue(destination, ans);
                         break;
 
 
@@ -126,15 +139,15 @@ public class VirtualMachine {
                         source1 = split[2];
                         source2 = split[3];
                         if(source1.matches(vPattern))
-                            intSource1 = getField(source1);
+                            intSource1 = getValue(source1);
                         else
                             intSource1 = Integer.parseInt(source1);
                         if(source2.matches(vPattern))
-                            intSource2 = getField(source2);
+                            intSource2 = getValue(source2);
                         else
                             intSource2 = Integer.parseInt(source2);
                         ans = intSource1 * intSource2;
-                        setField(destination, ans);
+                        setValue(destination, ans);
                         break;
 
 
@@ -147,18 +160,18 @@ public class VirtualMachine {
                         source1 = split[2];
                         source2 = split[3];
                         if(source1.matches(vPattern))
-                            intSource1 = getField(source1);
+                            intSource1 = getValue(source1);
                         else
                             intSource1 = Integer.parseInt(source1);
                         if(source2.matches(vPattern))
-                            intSource2 = getField(source2);
+                            intSource2 = getValue(source2);
                         else
                             intSource2 = Integer.parseInt(source2);
                         if (intSource2 != 0)
-                        	ans = intSource1 / intSource2;
+                            ans = intSource1 / intSource2;
                         else
-                        	System.out.println("ERROR: Division by 0! You broke the universe. Are  you happy?");
-                        setField(destination, ans);
+                            System.out.println("ERROR: Division by 0! You broke the universe. Are  you happy?");
+                        setValue(destination, ans);
                         break;
 
 
@@ -167,9 +180,8 @@ public class VirtualMachine {
                      */
                     case "IN":
                         Scanner scan = new Scanner(System.in);
-                        // ask user for an integer
                         int input = scan.nextInt();
-                        setField(split[1], input);
+                        setValue(split[1], input);
                         break;
 
 
@@ -179,7 +191,7 @@ public class VirtualMachine {
                     case "OUT":
                         int length = split.length - 1;
                         if(length == 1 && split[1].matches(vPattern)) {
-                            value = getField(split[1]);
+                            value = getValue(split[1]);
                             System.out.println(value);
                         }
                         else {
@@ -202,12 +214,12 @@ public class VirtualMachine {
                     case "STO":
                         destination = split[1];
                         String source = split[2];
-                        int intSource = 0;
+                        int intSource;
                         if(source.matches(vPattern))
-                            intSource = getField(source);
+                            intSource = getValue(source);
                         else
                             intSource = Integer.parseInt(source);
-                        setField(destination, intSource);
+                        setValue(destination, intSource);
                         break;
 
 
@@ -216,9 +228,9 @@ public class VirtualMachine {
                      */
                     case "BRn":
                         jumpLabel = split[2];
-                        value = getField(split[1]);
+                        value = getValue(split[1]);
                         if(value < 0)
-                            for(Label label : List)
+                            for(Label label : LabelList)
                             {
                                 if(label.getName().equals(jumpLabel)) {
                                     counter = label.getLocation();
@@ -232,9 +244,9 @@ public class VirtualMachine {
                      */
                     case "BRz":
                         jumpLabel = split[2];
-                        value = getField(split[1]);
+                        value = getValue(split[1]);
                         if(value ==  0)
-                            for(Label label : List)
+                            for(Label label : LabelList)
                             {
                                 if(label.getName().equals(jumpLabel)) {
                                     counter = label.getLocation();
@@ -248,9 +260,9 @@ public class VirtualMachine {
                      */
                     case "BRp":
                         jumpLabel = split[2];
-                        value = getField(split[1]);
+                        value = getValue(split[1]);
                         if(value > 0)
-                            for(Label label : List)
+                            for(Label label : LabelList)
                             {
                                 if(label.getName().equals(jumpLabel)) {
                                     counter = label.getLocation();
@@ -264,9 +276,9 @@ public class VirtualMachine {
                      */
                     case "BRzp":
                         jumpLabel = split[2];
-                        value = getField(split[1]);
+                        value = getValue(split[1]);
                         if(value >=  0)
-                            for(Label label : List) {
+                            for(Label label : LabelList) {
                                 if(label.getName().equals(jumpLabel)) {
                                     counter = label.getLocation();
                                 }
@@ -279,9 +291,9 @@ public class VirtualMachine {
                      */
                     case "BRzn":
                         jumpLabel = split[2];
-                        value = getField(split[1]);
+                        value = getValue(split[1]);
                         if(value <=  0)
-                            for(Label label : List) {
+                            for(Label label : LabelList) {
                                 if(label.getName().equals(jumpLabel)) {
                                     counter = label.getLocation();
                                 }
@@ -294,7 +306,7 @@ public class VirtualMachine {
                      */
                     case "JMP":
                         jumpLabel = split[1];
-                        for(Label label : List)
+                        for(Label label : LabelList)
                         {
                             if(label.getName().equals(jumpLabel)) {
                                 counter = label.getLocation();
@@ -309,30 +321,36 @@ public class VirtualMachine {
     }
 
 
-    private void setField(String fieldName, int value) {
-        try {
-            Field field = getClass().getDeclaredField(fieldName);
-            field.setInt(this, value);
-        } catch (Exception e) {
-            e.printStackTrace();
+    private void setLabel(String name, int location) {
+        String lPattern = "^[A-Za-z]+";
+        if(name.matches(lPattern)) {
+            LabelList.add(new Label(name, location));
         }
-    }
-    private int getField(String fieldName) {
-        int value = 0;
-        try {
-            Field field = getClass().getDeclaredField(fieldName);
-            value = field.getInt(field);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return value;
     }
 
-    private void setLabel(String name, int location) {
-        String labelPattern = "^[A-Za-z]+";
-        if(name.matches(labelPattern)) {
-            List.add(new Label(name, location));
+    private void setVariable (String name, int value) {
+        String vPattern = "^[A-Za-z][A-Za-z0-9]+";
+        if(name.matches(vPattern))
+            VariableList.add(new Variable(name, value));
+    }
+
+    private void setValue(String name, int value) {
+        for(Variable variable : VariableList)
+        {
+            if(variable.getName().equals(name)) {
+                variable.setValue(value);
+            }
         }
+    }
+
+    private int getValue (String name) {
+        for(Variable variable : VariableList)
+        {
+            if(variable.getName().equals(name)) {
+                return variable.getValue();
+            }
+        }
+        return 0;
     }
 
     public class Label {
@@ -347,6 +365,46 @@ public class VirtualMachine {
         }
         int getLocation() {
             return loc;
+        }
+    }
+
+    public class Variable {
+        String name;
+        int value;
+
+        Variable (String name, int value) {
+            this.name = name;
+            this.value = value;
+        }
+
+        Variable (String name) {
+            this.name = name;
+        }
+
+        String getName() {
+            return name;
+        }
+
+        int getValue() {
+            return value;
+        }
+
+        void setValue(int value) {
+            this.value = value;
+        }
+
+        @Override
+        public boolean equals(Object o){
+            if(o instanceof Variable){
+                Variable toCompare = (Variable) o;
+                return this.name.equals(toCompare.name);
+            }
+            return false;
+        }
+
+        @Override
+        public int hashCode() {
+            return name.hashCode();
         }
     }
 }
