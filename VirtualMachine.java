@@ -1,5 +1,5 @@
 
-//Cameron Wright
+//Cameron Wright and Cameron Foster
 
 package vmPackage;
 
