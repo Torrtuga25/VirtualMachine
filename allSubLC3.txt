@@ -1,0 +1,35 @@
+; Display all of the fields
+;
+; Initialize the values
+STO increment 2
+start
+OUT "Enter the initial number:"
+IN num1
+OUT "Enter the initial number:"
+IN num2
+;
+ADD sum num1 num2
+OUT "This is the sum of the numbers"
+OUT sum
+;
+SUB sub num1 num2
+OUT "This is the subtraction of the numbers"
+OUT sub
+;
+MUL factor num1 num2
+OUT "This is the multiplication of the numbers"
+OUT factor
+;
+DIV quo num1 num2
+OUT "This is the division of the numbers"
+OUT quo
+;
+BRn sum start
+BRz sub start
+BRzp sub start
+BRzn factor start
+BRp quo start
+;
+OUT "you are never done"
+;
+HALT

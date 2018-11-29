@@ -23,7 +23,12 @@ public class VirtualMachine {
 
     //Add SubLC3 variables here
     private static int increment;
-    private static int number;
+    private static int num1;
+    private static int num2;
+    private static int sum;
+    private static int sub;
+    private static int quo;
+    private static int factor;
     private static int tempNum;
 
     //run the Virtual Machine
@@ -32,7 +37,7 @@ public class VirtualMachine {
     }
 
     public VirtualMachine() {
-        try (Scanner br = new Scanner(new FileReader("src\\vmPackage\\mySubLC3.txt"))) {
+        try (Scanner br = new Scanner(new FileReader("src\\vmPackage\\allSubLC3.txt"))) {
             String line;
 
             //Adds relevant lines to the program array
@@ -65,7 +70,7 @@ public class VirtualMachine {
                 String source2;
                 int intSource1;
                 int intSource2;
-                int ans;
+                int ans = 0;
                 String jumpLabel;
                 int value;
 
@@ -149,7 +154,10 @@ public class VirtualMachine {
                             intSource2 = getField(source2);
                         else
                             intSource2 = Integer.parseInt(source2);
-                        ans = intSource1 / intSource2;
+                        if (intSource2 != 0)
+                        	ans = intSource1 / intSource2;
+                        else
+                        	System.out.println("ERROR: Division by 0! You broke the universe. Are  you happy?");
                         setField(destination, ans);
                         break;
 
@@ -161,7 +169,6 @@ public class VirtualMachine {
                         Scanner scan = new Scanner(System.in);
                         // ask user for an integer
                         int input = scan.nextInt();
-                        scan.close();
                         setField(split[1], input);
                         break;
 
